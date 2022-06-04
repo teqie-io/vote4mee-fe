@@ -1,0 +1,103 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+        "airbnb",
+        "plugin:react/recommended",
+        "plugin:prettier/recommended",
+        "plugin:import/errors",
+        "plugin:import/warnings",
+        "plugin:react-hooks/recommended",
+        "prettier"
+    ],
+    "plugins": [
+        "react"
+    ],
+    "parser": "@babel/eslint-parser",
+    "parserOptions": {
+        "ecmaVersion": 2021,
+        "requireConfigFile": false,
+        "ecmaFeatures": {
+            "experimentalObjectRestSpread": true,
+            "impliedStrict": true
+        }
+    },
+    "settings": {
+        "import/resolver": {
+            "babel-module": {}
+        }
+    },
+    "rules": {
+        "radix": "warn",
+        "max-len": [
+            "warn",
+            {
+                "code": 120,
+                "tabWidth": 4,
+                "comments": 120,
+                "ignoreUrls": true,
+                "ignoreStrings": true,
+                "ignoreComments": false,
+                "ignoreRegExpLiterals": true,
+                "ignoreTrailingComments": true,
+                "ignoreTemplateLiterals": true
+            }
+        ],
+        "no-shadow": "warn",
+        "no-unused-vars": "warn",
+        "no-param-reassign": "warn",
+        "consistent-return": "warn",
+        "jsx-a11y/href-no-hash": [
+            "off"
+        ],
+        "jsx-a11y/anchor-is-valid": "off",
+        "jsx-a11y/no-static-element-interactions": "off",
+        "jsx-a11y/click-events-have-key-events": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+        "jsx-a11y/label-has-associated-control": "off",
+        "import/extensions": [
+            "error",
+            "ignorePackages",
+            {
+                "js": "never",
+                "jsx": "never",
+                "ts": "never",
+                "tsx": "never"
+            }
+        ],
+        "prefer-arrow-callback": "error",
+        "import/no-extraneous-dependencies": "off",
+        "react/prop-types": "off",
+        "react/forbid-prop-types": "off",
+        "react/style-prop-object": "warn",
+        "react/no-array-index-key": "off",
+        "react/jsx-no-target-blank": [
+            "warn",
+            {
+                "enforceDynamicLinks": "never"
+            }
+        ],
+        "react/no-unescaped-entities": "off",
+        "react/jsx-props-no-spreading": "off",
+        "react/jsx-filename-extension": [
+            "warn",
+            {
+                "extensions": [
+                    ".js",
+                    ".jsx"
+                ]
+            }
+        ],
+        "react/destructuring-assignment": "off",
+        "react/function-component-definition": [
+            "error",
+            {
+                "namedComponents": "arrow-function",
+                "unnamedComponents": "arrow-function"
+            }
+        ],
+        "react-hooks/exhaustive-deps": "off"
+    }
+}

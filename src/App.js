@@ -4,8 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { Link } from '@mui/material';
+import { utils, web3 } from '@project-serum/anchor';
+import * as buffer from 'buffer';
+import { useWalletKit, useSolana, useConnectedWallet } from '@gokiprotocol/walletkit';
 import Carroussel from './components/Carroussel';
 import EmployeeCard from './components/EmployeeCard';
+import { getProgram } from './blockchain/connector';
 
 const App = () => {
     const employees = [
@@ -251,8 +255,9 @@ const App = () => {
         key: uuidv4(),
         content: <EmployeeCard name={name} role={role} content={content} skillList={skillList} />
     }));
-
+    const wallet = useConnectedWallet();
     const [phantom, setPhantom] = useState(null);
+    const { connect } = useWalletKit();
 
     useEffect(() => {
         if ('solana' in window) {
@@ -272,8 +277,15 @@ const App = () => {
         });
     }, [phantom]);
 
-    const connectHandler = () => {
-        phantom?.connect();
+    useEffect(() => {
+        console.log(wallet);
+    }, [wallet]);
+
+    const connectHandler = async () => {
+        await phantom?.connect();
+        connect();
+        console.log(wallet);
+        console.log(phantom.publicKey.toString());
     };
 
     const disconnectHandler = () => {
@@ -282,6 +294,42 @@ const App = () => {
 
     const getAccount = async () => {
         phantom?.request({ method: 'connect' }).then((result) => console.log(result));
+    };
+
+    const createCandidate = async () => {
+        const program = await getProgram(wallet);
+        console.log(program);
+        const candidate = new web3.Keypair();
+
+        const [treasurerPublicKey] = await web3.PublicKey.findProgramAddress(
+            [Buffer.from('treasurer'), candidate.publicKey.toBuffer()],
+            program.programId
+        );
+        const treasurer = treasurerPublicKey;
+
+        const candidateTokenAccount = await utils.token.associatedAddress({
+            mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
+            owner: treasurer
+        });
+
+        try {
+            await program.rpc.initializeCandidate({
+                accounts: {
+                    authority: wallet.publicKey,
+                    candidate: candidate.publicKey,
+                    treasurer,
+                    mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
+                    candidateTokenAccount,
+                    tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+                    associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: web3.SYSVAR_RENT_PUBKEY
+                },
+                signers: [candidate]
+            });
+        } catch (err) {
+            console.log(err);
+        }
     };
 
     if (phantom) {
@@ -294,6 +342,9 @@ const App = () => {
                         </Button>
                         <Button color="secondary" className="center-page" onClick={getAccount}>
                             Get Phantom's account
+                        </Button>
+                        <Button color="secondary" className="center-page" onClick={createCandidate}>
+                            Create candidate
                         </Button>
                     </Box>
                     <Carroussel cards={cards} height="100vh" width="80%" margin="0 auto" offset={1} showArrows />

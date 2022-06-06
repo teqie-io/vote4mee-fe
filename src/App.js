@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
 import Button from "@mui/material/Button";
-import { Card, CircularProgress, Container, LinearProgress, Link, Paper, Typography } from '@mui/material';
+import { Card, CircularProgress, Container, Link, Paper, Typography } from '@mui/material';
 import {styled} from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import {useDispatch, useSelector} from "react-redux";
 import { useWalletKit, useConnectedWallet } from '@gokiprotocol/walletkit';
 import { web3, utils } from '@project-serum/anchor';
+import * as anchor from '@project-serum/anchor';
 import Page from "./components/Page";
 import Logo from "./components/Logo";
 import useResponsive from "./hooks/useResponsive";
-import { connectWallet, me } from './store/reducers/authReducer';
+import { me } from './store/reducers/authReducer';
 import { getProgram } from './blockchain/connector';
 import Router from './routes';
 import { getEmployees } from './store/reducers/employeesReducer';
@@ -70,40 +71,47 @@ const App = () => {
         if (!employees.length) dispatch(getEmployees({}));
     }, []);
 
-    const createCandidate = async () => {
-        const program = await getProgram(wallet);
-        const candidate = new web3.Keypair();
+    useEffect(() => {
+        const createCandidate = async () => {
+            console.log('call create candidate');
+            const program = await getProgram(wallet);
+            const candidate = new web3.Keypair();
 
-        const [treasurerPublicKey] = await web3.PublicKey.findProgramAddress(
-          [Buffer.from('treasurer'), candidate.publicKey.toBuffer()],
-          program.programId
-        );
-        const treasurer = treasurerPublicKey;
+            console.log(candidate);
+            console.log(wallet);
 
-        const candidateTokenAccount = await utils.token.associatedAddress({
-            mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
-            owner: treasurer
-        });
+            const [treasurerPublicKey] = await web3.PublicKey.findProgramAddress(
+              [Buffer.from('treasurer'), candidate.publicKey.toBuffer()],
+              program.programId
+            );
+            const treasurer = treasurerPublicKey;
 
-        try {
-            await program.rpc.initializeCandidate({
-                accounts: {
-                    authority: wallet.publicKey,
-                    candidate: candidate.publicKey,
-                    treasurer,
-                    mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
-                    candidateTokenAccount,
-                    tokenProgram: utils.token.TOKEN_PROGRAM_ID,
-                    associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
-                    systemProgram: web3.SystemProgram.programId,
-                    rent: web3.SYSVAR_RENT_PUBKEY
-                },
-                signers: [candidate]
+            const candidateTokenAccount = await utils.token.associatedAddress({
+                mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
+                owner: treasurer
             });
-        } catch (err) {
-            console.log(err);
-        }
-    };
+
+            try {
+                await program.rpc.initializeCandidate({
+                    accounts: {
+                        authority: wallet.publicKey,
+                        candidate: candidate.publicKey,
+                        treasurer,
+                        mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
+                        candidateTokenAccount,
+                        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+                        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+                        systemProgram: web3.SystemProgram.programId,
+                        rent: web3.SYSVAR_RENT_PUBKEY
+                    },
+                    signers: [candidate]
+                });
+            } catch (err) {
+                console.log(err);
+            }
+        };
+        if (wallet) createCandidate();
+    }, [wallet]);
 
     if (wallet && !loading && !auth?.name) return <Box width="100vw" height="100vh" display="flex" justifyContent="center" alignItems="center">
         <Paper sx={{ width: "550px", p: 4}}>
@@ -116,8 +124,7 @@ const App = () => {
             </Box>
             <Box display="flex" justifyContent="center" flexDirection="center" alignItems="center">
                 <Button variant="contained" onClick={ async () => {
-                    connect();
-                    await createCandidate();
+                    await connect();
                 }}>
                     Connect to another wallet
                 </Button>
@@ -126,7 +133,7 @@ const App = () => {
     </Box>;
 
     if (wallet?.connected) return <Router />;
-    if (wallet && !wallet.connected) return (
+    if (!wallet || (wallet && !wallet.connected)) return (
         <Page title="Login">
             <RootStyle>
                 <HeaderStyle>
@@ -153,10 +160,9 @@ const App = () => {
                         <Box display="flex" justifyContent="center" my={5}>
                             <img src="/static/icons/phantom-wallet.avif" alt="login" height={200} width={200}/>
                         </Box>
-                        {!window.solana ?
+                        {window.solana ?
                             <Button variant="contained" onClick={ async () => {
-                                connect();
-                                await createCandidate();
+                                await connect();
                             }}>
                                 Connect to Phantom
                             </Button> :

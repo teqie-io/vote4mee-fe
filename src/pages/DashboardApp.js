@@ -13,6 +13,7 @@ import {
 } from '../sections/@dashboard/app';
 import { getAuthState, getEmployeesState } from '../store/selectors';
 import roleInfo from '../_mock/roleInfo';
+import { fNumber } from '../utils/formatNumber';
 
 export default function DashboardApp() {
   const theme = useTheme();
@@ -46,18 +47,11 @@ export default function DashboardApp() {
             <Grid item xs={12} md={6} lg={8}>
                 <AppConversionRates
                     title="My votes"
-                    subheader="used 987,654,321 tokens out of 1,000,000,000 tokens"
+                    subheader={`used ${fNumber(123 + 456 + 789)} tokens out of ${fNumber(auth?.balance)} tokens`}
                     chartData={[
-                        { label: 'Italy', value: 400 },
-                        { label: 'Japan', value: 430 },
-                        { label: 'China', value: 448 },
-                        { label: 'Canada', value: 470 },
-                        { label: 'France', value: 540 },
-                        { label: 'Germany', value: 580 },
-                        { label: 'South Korea', value: 690 },
-                        { label: 'Netherlands', value: 1100 },
-                        { label: 'United States', value: 1200 },
-                        { label: 'United Kingdom', value: 1380 },
+                        { label: 'Haris Nguyen', value: 123 },
+                        { label: 'Quynh Nguyen', value: 456 },
+                        { label: 'Hoang Van Cuong', value: 789 }
                     ]}
                 />
             </Grid>
@@ -66,8 +60,8 @@ export default function DashboardApp() {
             <AppCurrentVisits
               title="Token used"
               chartData={[
-                { label: 'Used token', value: 4344 },
-                { label: 'Leftover token', value: 5435 }
+                { label: 'Used token', value: (auth?.weight * 1e9 - auth?.balance) || 0 },
+                { label: 'Leftover token', value: auth?.balance || 0 }
               ]}
               chartColors={[
                 theme.palette.chart.blue[0],

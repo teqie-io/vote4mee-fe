@@ -3,7 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
 import { Box, Divider, Typography, Stack, MenuItem, Avatar, IconButton } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { useConnectedWallet } from '@gokiprotocol/walletkit';
+import { useConnectedWallet, useSolana } from '@gokiprotocol/walletkit';
 import MenuPopover from '../../components/MenuPopover';
 import { getAuthState } from '../../store/selectors';
 
@@ -24,6 +24,7 @@ export default function AccountPopover() {
   const anchorRef = useRef(null);
   const { auth } = useSelector(state => getAuthState(state));
   const wallet = useConnectedWallet();
+  const { disconnect } = useSolana();
 
   const [open, setOpen] = useState(null);
 
@@ -37,6 +38,7 @@ export default function AccountPopover() {
 
     const handleLogout = () => {
       wallet.disconnect();
+      disconnect();
       window.location.href = "/";
     };
 

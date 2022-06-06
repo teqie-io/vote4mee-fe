@@ -16,13 +16,14 @@ const Employee = () => {
 
   useEffect(() => {
     if (!employees.length) dispatch(getEmployees({}));
-    else setCards(employees.map(({ id, employeeId, name, roleId, skills, overview, comments }, index) => ({
+    else setCards(employees.map(({ walletId, employeeId, name, roleId, skills, overview, comments }, index) => ({
         key: index,
         content: <EmployeeCard name={name} roleId={roleId} overview={overview}
                                photoURL={`/static/mock-images/avatars/avatar_${employeeId}.jpg`}
                                content={'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.'}
                                comments={comments}
                                skillList={skills}
+                               walletId={walletId}
                                socialList={generateRandomSocial()} />
     })));
   }, [employees])

@@ -18,14 +18,20 @@ import {
 } from '@mui/material';
 import { Icon } from '@iconify/react';
 import { useSelector } from 'react-redux';
+import { utils, web3 } from '@project-serum/anchor';
+import * as anchor from '@project-serum/anchor';
+import { useConnectedWallet } from '@gokiprotocol/walletkit';
 import roleInfo from "../../_mock/roleInfo";
 import skillInfo from "../../_mock/skilInfo";
 import {fNumber} from "../../utils/formatNumber";
 import { getAuthState, getEmployeesState } from '../../store/selectors';
+import { getProgram } from '../../blockchain/connector';
 
-const EmployeeCard = ({ name, roleId, overview, photoURL, content, comments, skillList, socialList }) => {
+const EmployeeCard = ({ walletId, name, roleId, overview, photoURL, content, comments, skillList, socialList }) => {
     const { employees } = useSelector(state => getEmployeesState(state));
     const { auth } = useSelector(state => getAuthState(state));
+
+    const wallet = useConnectedWallet();
 
     const [openVote, setOpenVote] = useState(false);
     const [openDetail, setOpenDetail] = useState(false);
@@ -46,6 +52,52 @@ const EmployeeCard = ({ name, roleId, overview, photoURL, content, comments, ski
     const handleDetailClose = () => {
         setOpenDetail(false);
     };
+
+
+    const voteCandidate = async ({ candidatePublicKey, amount }) => {
+        const program = await getProgram(wallet);
+        console.log(candidatePublicKey);
+        const [candidateTreasurerPublicKey] = await web3.PublicKey.findProgramAddress(
+          [Buffer.from('treasurer'), candidatePublicKey.toBuffer()],
+          program.programId
+        );
+        const candidateTreasurer = candidateTreasurerPublicKey;
+
+        const candidateTokenAccount = await utils.token.associatedAddress({
+            mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
+            owner: candidateTreasurer
+        });
+
+        const voterTokenAccount = await utils.token.associatedAddress({
+            mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
+            owner: wallet.publicKey
+        });
+
+        const [ballot] = await web3.PublicKey.findProgramAddress(
+          [Buffer.from('ballot'), candidatePublicKey.toBuffer(), wallet.publicKey.toBuffer()],
+          program.programId,
+        )
+
+        const programId = await program.rpc.vote(new anchor.BN(amount), {
+            accounts: {
+                admin: new anchor.web3.PublicKey('6JHnxvhDCTxxt4HQ8XonSwo7VZZ5KmUfZCitkg8unfkq'),
+                authority: wallet.publicKey,
+                candidate: candidatePublicKey,
+                treasurer: candidateTreasurer,
+                mint: new web3.PublicKey('6sjwznizh5GL9nrSFmmnUAGwb3kAusXx7WCM4mRAPf6z'),
+                candidateTokenAccount,
+                ballot,
+                voterTokenAccount,
+                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            },
+            signers: [],
+        });
+
+        console.log(programId);
+    }
 
     // console.log('Comments:', comments);
     return (
@@ -82,6 +134,10 @@ const EmployeeCard = ({ name, roleId, overview, photoURL, content, comments, ski
 
                 <Typography variant="p" mb={2} fontStyle="italic" fontWeight={600} textAlign="center">
                     {overview}
+                </Typography>
+
+                <Typography variant="p" mb={2} textAlign="center">
+                    {walletId}
                 </Typography>
 
                 <Typography variant="p" mb={2} textAlign="center">
@@ -150,9 +206,7 @@ const EmployeeCard = ({ name, roleId, overview, photoURL, content, comments, ski
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => {
-                            console.log(tokens);
-                        }} variant="contained">Vote</Button>
+                        <Button onClick={() => voteCandidate({candidatePublicKey: new anchor.web3.PublicKey(walletId), amount: (tokens / 1e9)})} variant="contained">Vote</Button>
                         <Button onClick={handleVoteClose}>Cancel</Button>
                     </DialogActions>
                 </Dialog>

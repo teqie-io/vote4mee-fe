@@ -1,5 +1,7 @@
 import {useDispatch, useSelector} from "react-redux";
 import { useEffect, useState } from 'react';
+import Box from '@mui/material/Box';
+import { CircularProgress } from '@mui/material';
 import EmployeeCard from "../components/carroussel/EmployeeCard";
 import Carroussel from "../components/carroussel/Carroussel";
 import { getEmployeesState } from '../store/selectors';
@@ -31,7 +33,8 @@ const Employee = () => {
     return result;
   }
 
-  console.log(employees);
+  if (!cards.length)
+    return <Box width="100%" height="100%" display="flex" justifyContent="center" alignItems="center"><CircularProgress /></Box>;
   return (
         <Carroussel cards={cards} height="100%" width="80%" margin="0 auto" offset={1} />
   );

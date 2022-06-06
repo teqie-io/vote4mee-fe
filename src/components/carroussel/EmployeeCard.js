@@ -21,13 +21,15 @@ import { useSelector } from 'react-redux';
 import roleInfo from "../../_mock/roleInfo";
 import skillInfo from "../../_mock/skilInfo";
 import {fNumber} from "../../utils/formatNumber";
-import { getEmployeesState } from '../../store/selectors';
+import { getAuthState, getEmployeesState } from '../../store/selectors';
 
 const EmployeeCard = ({ name, roleId, overview, photoURL, content, comments, skillList, socialList }) => {
     const { employees } = useSelector(state => getEmployeesState(state));
+    const { auth } = useSelector(state => getAuthState(state));
 
     const [openVote, setOpenVote] = useState(false);
     const [openDetail, setOpenDetail] = useState(false);
+    const [tokens, setTokens] = useState(0);
 
     const handleVoteOpen = () => {
         setOpenVote(true);
@@ -139,19 +141,24 @@ const EmployeeCard = ({ name, roleId, overview, photoURL, content, comments, ski
                           label="Token amount"
                           type="number"
                           fullWidth
-                          helperText={`out of ${fNumber(1000000000)} tokens left.`}
+                          value={tokens}
+                          helperText={`out of ${fNumber(auth?.balance)} tokens left.`}
+                          onChange={(event) => setTokens(event.target.value)}
                           InputLabelProps={{
                               shrink: true,
                           }}
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleVoteClose} variant="contained">Vote</Button>
+                        <Button onClick={() => {
+                            console.log(tokens);
+                        }} variant="contained">Vote</Button>
                         <Button onClick={handleVoteClose}>Cancel</Button>
                     </DialogActions>
                 </Dialog>
                 <Dialog open={openDetail} onClose={handleDetailClose}>
-                    <DialogTitle>{name}</DialogTitle>
+                    <DialogTitle><Typography variant="h4" fontWeight={700}>Comment for {name}
+                </Typography></DialogTitle>
                     <DialogContent>
                         <Typography fontWeight={600}>Comments</Typography>
                         {comments.map((comment) => (
@@ -166,7 +173,10 @@ const EmployeeCard = ({ name, roleId, overview, photoURL, content, comments, ski
                         ))}
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleDetailClose} variant="contained">Vote</Button>
+                        <Button onClick={() => {
+                            handleDetailClose();
+                            handleVoteOpen();
+                        }} variant="contained">Vote</Button>
                         <Button onClick={handleDetailClose}>Cancel</Button>
                     </DialogActions>
                 </Dialog>

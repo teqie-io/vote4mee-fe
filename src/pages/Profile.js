@@ -8,14 +8,15 @@ import {
 import { useSelector } from 'react-redux';
 import { useConnectedWallet } from '@gokiprotocol/walletkit';
 import Box from '@mui/material/Box';
+import * as solanaWeb3 from '@solana/web3.js';
 import Page from '../components/Page';
 import roleInfo from "../_mock/roleInfo";
 import { getAuthState } from '../store/selectors';
-import employee from './Employee';
+import { fNumber } from '../utils/formatNumber';
 
 const Profile = () => {
   const wallet = useConnectedWallet();
-  const { auth: { roleId, name, photoURL, balance, contributions } } = useSelector((state) => getAuthState(state));
+  const { auth } = useSelector((state) => getAuthState(state));
 
   return (
     <Page title="Profile">
@@ -26,13 +27,13 @@ const Profile = () => {
                 <Typography component="h2" variant="h4" mb={2}>
                   User information
                 </Typography>
-                <img src={photoURL} alt="avatar" width={200} height={200}
+                <img src={auth?.photoURL} alt="avatar" width={200} height={200}
                      style={{ borderRadius: '50%', margin: "auto" }}/>
                 <Typography align="center" sx={{ fontWeight: 600, fontSize: '1.2rem' }} mt={2}>
-                  {name}
+                  {auth?.name}
                 </Typography>
                 <Typography align="center" variant="subtitle1">
-                  {roleInfo[roleId].name}
+                  {auth?.roleId && roleInfo[auth?.roleId]?.name}
                 </Typography>
               </Paper>
             </Grid>
@@ -58,7 +59,7 @@ const Profile = () => {
                         id="id"
                         label="Balance"
                         type="text"
-                        value={balance}
+                        value={fNumber(auth?.balance)}
                         fullWidth
                         variant="outlined"
                         disabled
@@ -68,7 +69,7 @@ const Profile = () => {
                     <TextField
                         id="name"
                         label="Name"
-                        value={name}
+                        value={auth?.name}
                         fullWidth
                         variant="outlined"
                     />
@@ -76,17 +77,17 @@ const Profile = () => {
                 </Grid>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={8}>
-                    <Box display="flex">
+                    <Box display="flex" alignItems="center">
                         <strong>Project list:</strong>
                         {['Giiki', 'Sota', 'Vote4mee'].map((project, index) =>
-                          <Typography variant="subtitle2" key={index} sx={{ bgcolor: (theme) => theme.palette.grey[100], p: 0.5 }}>{project}</Typography> )}
+                          <Typography variant="subtitle2" key={index} color="white" borderRadius="0.5em" sx={{ bgcolor: (theme) => theme.palette.info.main, p: 1, ml: 2 }}>{project}</Typography> )}
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <TextField
                         id="contributions"
                         label="Contributions"
-                        value={contributions || 0}
+                        value={auth?.contributions || 0}
                         fullWidth
                         variant="outlined"
                         disabled
